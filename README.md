@@ -37,7 +37,7 @@ Antes de iniciar qualquer scan, o entendimento do alvo é fundamental:
 ## **2. Reconnaissance and Subdomain Enumeration**
 
 ### **2.1 Passive Subdomain Enumeration**
-**🛠️Tools:** [Subfinder](https://github.com/projectdiscovery/subfinder), [Amass](https://github.com/OWASP/Amass), [CRTSH](https://crt.sh/), [Github-Search](https://github.com/gwen001/github-search)
+**🛠️Tools:** [Subfinder](https://github.com/projectdiscovery/subfinder), [Alterx](https://github.com/projectdiscovery/alterx)
 
 <br>
 
@@ -57,7 +57,7 @@ cat subss.txt | alterx -o list_sub.txt
 ```
 
 ### **2.2 Active Subdomain Enumeration**
-**🛠️Tools:** [MassDNS](https://github.com/blechschmidt/massdns), [Shuffledns](https://github.com/projectdiscovery/shuffledns)
+**🛠️Tools:** [Shuffledns](https://github.com/projectdiscovery/shuffledns), [Naabu](https://github.com/projectdiscovery/naabu), [Httpx](https://github.com/projectdiscovery/httpx)
 
 <br>
 
@@ -79,7 +79,7 @@ cat naabu.txt | httpx -title -cl -sc -mc 200,201,301,302,302,403 -ports 80,443,8
 <br>
 
 ## **3. Discovery and Probing**
-**🛠️Tools:** [MassDNS](https://github.com/blechschmidt/massdns), [Shuffledns](https://github.com/projectdiscovery/shuffledns)
+**🛠️Tools:** [OpenRedirex](https://github.com/devanshbatham/OpenRedirex)
 
 <br>
 

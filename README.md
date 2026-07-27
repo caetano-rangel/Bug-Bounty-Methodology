@@ -123,7 +123,7 @@ sort -u gf_hits.txt > gf_hits_unique.txt
 
 cd ~/OpenRedirex
 ```bash
-cat ~/dedup.txt | python3 openredirex.py > resultados.txt
+cat ~/gf_hits_unique.txt | python3 openredirex.py > resultados.txt
 ```
 
 Validação manual com - curl -i target.com

@@ -118,11 +118,7 @@ cat all_urls.txt | grep -iE '(landing|eurl|dest|callback|forward|goto)=' >> gf_h
 ```
 
 ```bash
-cat gf_hits.txt | sort -u | uro > dedup.txt
-```
-
-```bash
-cat gf_hits.txt | sort -u | uro > dedup.txt
+sort -u gf_hits.txt > gf_hits_unique.txt
 ```
 
 cd ~/OpenRedirex

@@ -53,7 +53,7 @@ cat * | sort -u > subss.txt
 
 **Alterx**
 ```bash
-cat subss.txt | alterx -o list_sub.txt
+cat subss.txt | alterx -o alterx.txt
 ```
 
 ### **2.2 Active Subdomain Enumeration**
@@ -90,7 +90,7 @@ awk '{print $1}' live.txt > live_limpo.txt
 ```
 
 ```bash
-katana -u live.txt -d 5 -jc -o katana.txt
+katana -u live_limpo.txt -d 5 -jc -o katana.txt
 ```
 
 ```bash

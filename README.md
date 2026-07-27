@@ -16,8 +16,9 @@
 | 1. [Initial Notes](#1-initial-notes-and-create-account) | Initial Notes About Application |
 | 2. [Reconnaissance](#2-reconnaissance-and-subdomain-enumeration) | Subdomain Enumeration & Initial Scanning |
 | 3. [Discovery](#3-discovery-and-probing) | Probing, Vulnerability Scanning & Analysis |
-| 4. [POC Creation](#4-proof-of-concept-poc-creation) | Documentation & Evidence |
-| 5. [Reporting](#5-reporting) | Final Documentation |
+| 4. [Business Logic](#4-business-logic) | Burp Testing |
+| 5. [POC Creation](#5-proof-of-concept-poc-creation) | Documentation & Evidence |
+| 6. [Reporting](#6-reporting) | Final Documentation |
 
 ---
 <br>
@@ -173,3 +174,15 @@ subzy run --targets takeover.txt --hide_fails --https --verify_ssl
 ```bash
 curl -sv https://www.target.com 2>&1 | head -40
 ```
+<br>
+
+## **4. Business Logic**
+
+Antes de iniciar qualquer scan, o entendimento do alvo é fundamental:
+
+*   **Entenda o escopo:** Leia a política do programa (In-Scope vs Out-of-Scope).
+*   **Crie contas:** Crie contas de usuário (e de admin, se possível) para testar permissões.
+*   **Mapeie funcionalidades:** Identifique onde há login, upload de arquivos, busca, campos de perfil e interações com API.
+
+---
+<br>

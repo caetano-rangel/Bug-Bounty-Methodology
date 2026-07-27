@@ -98,6 +98,10 @@ katana -u redirects_limpo.txt -d 5 -jc -o katana.txt
 ```
 
 ```bash
+katana -list redirects_limpo.txt -d 3 -c 50 -p 20 -jc -mr "(url|redirect|next|return|goto|target|destination|rurl|view)=" -o katana.txt
+```
+
+```bash
 cat live.txt | sed 's|https\?://||' | xargs -P 10 -I {} gau --threads 5 {} >> gau.txt
 ```
 

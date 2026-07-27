@@ -86,11 +86,15 @@ cat naabu.txt | httpx -title -cl -sc -mc 200,201,301,302,302,403 -ports 80,443,8
 
 **🐞Open Redirect**
 ```bash
-awk '{print $1}' live.txt > live_limpo.txt
+cat live.txt | grep -E "\b200\b" > 200.txt
 ```
 
 ```bash
-katana -u live_limpo.txt -d 5 -jc -o katana.txt
+awk '{print $1}' 200.txt > 200_limpo.txt
+```
+
+```bash
+katana -u 200_limpo.txt -d 5 -jc -o katana.txt
 ```
 
 ```bash

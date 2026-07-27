@@ -178,11 +178,12 @@ curl -sv https://www.target.com 2>&1 | head -40
 
 ## **4. Business Logic**
 
-Antes de iniciar qualquer scan, o entendimento do alvo é fundamental:
+Iniciar os testes de endpoints no burp:
 
-*   **Entenda o escopo:** Leia a política do programa (In-Scope vs Out-of-Scope).
-*   **Crie contas:** Crie contas de usuário (e de admin, se possível) para testar permissões.
-*   **Mapeie funcionalidades:** Identifique onde há login, upload de arquivos, busca, campos de perfil e interações com API.
+*   **Entenda qual é o caminho ideal que o usuário deveria seguir (ex: Carrinho --> Pagamento --> Pedido Concluído).
+*   **Anote regras de negócio sensíveis para testar se é possível realizar ações fora de ordem, reutilizar tokens/cupons, ou manipular valores (como injetar números negativos ou quantidades absurdas).
+*   **Race Conditions -> Ocorre quando o sistema processa múltiplas requisições simultâneas para a mesma ação antes de atualizar o estado do banco de dados.
+*   **Testar as POCs.
 
 ---
 <br>

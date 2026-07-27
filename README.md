@@ -180,10 +180,13 @@ curl -sv https://www.target.com 2>&1 | head -40
 
 Iniciar os testes de endpoints no burp:
 
-*   Entenda qual é o caminho ideal que o usuário deveria seguir (ex: Carrinho --> Pagamento --> Pedido Concluído).
-*   Anote regras de negócio sensíveis para testar se é possível realizar ações fora de ordem, reutilizar tokens/cupons, ou manipular valores (como injetar números negativos ou quantidades absurdas).
-*   Race Conditions --> Ocorre quando o sistema processa múltiplas requisições simultâneas para a mesma ação antes de atualizar o estado do banco de dados.
-*   Testar as POCs --> https://github.com/caetano-rangel/POC.
+* **Entenda qual é o caminho ideal que o usuário deveria seguir (ex: Carrinho --> Pagamento --> Pedido Concluído).
+
+* **Anote regras de negócio sensíveis para testar se é possível realizar ações fora de ordem, reutilizar tokens/cupons, ou manipular valores (como injetar números negativos ou quantidades absurdas).
+
+* **Race Conditions --> Ocorre quando o sistema processa múltiplas requisições simultâneas para a mesma ação antes de atualizar o estado do banco de dados.
+
+* **Testar as POCs --> https://github.com/caetano-rangel/POC.
 
 ---
 <br>

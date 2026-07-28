@@ -87,11 +87,7 @@ cat naabu.txt | httpx -title -cl -sc -mc 200,201,301,302,302,403 -ports 80,443,8
 
 **🐞Open Redirect**
 ```bash
-grep -E "\b(200|301|302|303|307|308)\b" live.txt > redirects.txt
-```
-
-```bash
-awk '{print $1}' redirects.txt > redirects_limpo.txt
+awk '$2 ~ /^(200|301|302|303|307|308)$/ {print $1}' live.txt > redirects_limpo.txt
 ```
 
 ```bash

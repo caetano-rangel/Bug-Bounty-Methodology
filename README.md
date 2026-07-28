@@ -64,7 +64,7 @@ cat subss.txt | alterx -o alterx.txt
 
 **ShuffleDns**
 ```bash
-shuffledns -r ~/resolvers.txt -list subs_1.txt -mode resolve -o dns.txt
+shuffledns -r ~/resolvers.txt -list sub1.txt -mode resolve -o dns.txt
 ```
 
 **Naabu**

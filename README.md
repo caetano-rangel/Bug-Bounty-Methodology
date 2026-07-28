@@ -112,7 +112,7 @@ cat katana.txt gau.txt | sort -u > all_urls.txt
 
 Filtrar para campos que servem como redirect.
 ```bash
-cat all_urls.txt | gf redirect > gf_hits.tx
+cat all_urls.txt | gf redirect > gf_hits.txt
 ```
 ```bash
 cat all_urls.txt | grep -iE '(landing|eurl|dest|callback|forward|goto|url|redirect|next|return|goto|target|destination|rurl|view)=' >> gf_hits.txt

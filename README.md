@@ -44,7 +44,7 @@ Antes de iniciar qualquer scan, o entendimento do alvo é fundamental:
 
 **Subfinder**
 ```bash
-subfinder -d target.com -o subs_1.txt
+subfinder -d target.com -o sub1.txt
 ```
 
 **sort -u**

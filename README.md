@@ -186,5 +186,7 @@ Iniciar os testes de endpoints no burp:
 
 *   Testar as POCs --> https://github.com/caetano-rangel/POC.
 
+### **4.1 Spring Boot Actuator**
+
 ---
 <br>

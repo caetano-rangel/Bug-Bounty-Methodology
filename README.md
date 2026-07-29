@@ -182,6 +182,8 @@ Iniciar os testes de endpoints no burp:
 
 *   Race Conditions --> Ocorre quando o sistema processa múltiplas requisições simultâneas para a mesma ação antes de atualizar o estado do banco de dados.
 
+*   Esquema do Tomcat.
+
 *   Testar as POCs --> https://github.com/caetano-rangel/POC.
 
 ---

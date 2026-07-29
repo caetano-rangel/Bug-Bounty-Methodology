@@ -87,7 +87,7 @@ httpx -l dns.txt -title -cl -sc -mc 200,201,301,302,403 -ports 80,443,8080,8443 
 
 **🐞Open Redirect**
 ```bash
-awk '$2 ~ /^(200|301|302|303|307|308)$/ {print $1}' live.txt > redirects_limpo.txt
+awk '$2 ~ /^\[(200|301|302|303|307|308)\]$/ {print $1}' live.txt > redirects_limpo.txt
 ```
 
 ```bash

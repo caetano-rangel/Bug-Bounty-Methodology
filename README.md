@@ -98,29 +98,22 @@ katana -u redirects_limpo.txt -d 5 -jc -o katana.txt
 katana -list redirects_limpo.txt -d 3 -c 50 -p 20 -jc -mr "(url|redirect|next|return|goto|target|destination|rurl|view)=" -o katana.txt
 ```
 
-```bash
-cat live.txt | sed 's|https\?://||' | xargs -P 10 -I {} gau --threads 5 {} >> gau.txt
-```
-
-```bash
-cat katana.txt gau.txt | sort -u > all_urls.txt
-```
-
 Filtrar para campos que servem como redirect.
 ```bash
-cat all_urls.txt | gf redirect > gf_hits.txt
-```
-```bash
-cat all_urls.txt | grep -iE '(landing|eurl|dest|callback|forward|goto|url|redirect|next|return|goto|target|destination|rurl|view)=' >> gf_hits.txt
+cat katana.txt | gf redirect > gf.txt
 ```
 
 ```bash
-sort -u gf_hits.txt > gf_hits_unique.txt
+grep -E '^https?://([^/]+\.)?target\.[^/]+' gf.txt > gf_filtro.txt
+```
+
+```bash
+sort -u gf_filtro.txt > gf_unique.txt
 ```
 
 cd ~/OpenRedirex
 ```bash
-cat ~/gf_hits_unique.txt | python3 openredirex.py > resultados.txt
+cat ~/gf_unique.txt | python3 openredirex.py > resultados.txt
 ```
 
 Validação manual com - curl -i target.com

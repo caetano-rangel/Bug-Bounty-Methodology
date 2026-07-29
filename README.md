@@ -74,7 +74,7 @@ cat dns.txt | naabu -top-ports 100 -o naabu.txt
 
 **HTTPX**
 ```bash
-cat naabu.txt | httpx -title -cl -sc -mc 200,201,301,302,302,403 -ports 80,443,8080,8443 -o live.txt
+httpx -l dns.txt -title -cl -sc -mc 200,201,301,302,403 -ports 80,443,8080,8443 -timeout 5 -o live.txt
 ```
 ---
 <br>

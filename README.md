@@ -160,15 +160,15 @@ dnsx -l subs.txt -cname -resp -o cname.txt
 ```
 
 ```bash
-cat cname.txt | grep -iE 'github\.io|herokuapp\.com|s3\.amazonaws\.com|s3-website|azurewebsites\.net|cloudfront\.net|myshopify\.com|zendesk\.com|bitbucket\.io|wordpress\.com|fastly\.net|pantheon\.io|surge\.sh|helpjuice\.com|desk\.com|statuspage\.io|unbouncepages\.com' > takeover.txt
+sed -r 's/\x1B\[[0-9;]*[mK]//g' cname.txt | awk '{print $1, $3}' > hosts.txt
 ```
 
 ```bash
-subzy run --targets takeover.txt --hide_fails --https --verify_ssl
+chmod +x check_takeover.sh
 ```
 
 ```bash
-curl -sv https://www.target.com 2>&1 | head -40
+./check_takeover.sh hosts.txt > resultado.csv
 ```
 <br>
 

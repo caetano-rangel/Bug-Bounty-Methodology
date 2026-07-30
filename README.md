@@ -163,6 +163,10 @@ chmod +x check_takeover.sh
 ```bash
 ./check_takeover.sh hosts.txt > resultado.csv
 ```
+
+```bash
+./final_takeover.sh
+```
 <br>
 
 ## **4. Business Logic**

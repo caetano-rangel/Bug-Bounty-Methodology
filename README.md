@@ -223,5 +223,29 @@ https://HOST/application.properties
 https://HOST/web.config
 https://HOST/appsettings.json
 ```
+<br>
+
+### **4.3 PostMessage**
+
+Navegador não impõe nenhuma verificação de origem — é responsabilidade de quem escreve o addEventListener checar de onde a mensagem veio (event.origin).
+
+*   Se escreve em innerHTML/document.write → XSS
+*   Se redireciona (location.href = event.data.url) → open redirect ou até XSS via javascript
+*   Se salva token/dado sensível em localStorage → possível roubo de sessão se você conseguir também ler a resposta
+*   Se dispara uma ação (ex: logout(), updateProfile(event.data)) sem confirmar origem → CSRF-like via postMessage
+
+Opção 1 — DevTools (colar script no console)
+
+Opção 1 — Script Node + Puppeteer
+
+```bash
+node -v   # confirma que tem Node instalado
+npm install puppeteer
+npm approve-scripts puppeteer
+```
+
+```bash
+node postmessage_scanner.js 200.txt
+```
 ---
 <br>

@@ -172,6 +172,7 @@ chmod +x check_takeover.sh
 ./final_takeover.sh
 ```
 <br>
+---
 
 ## **4. Business Logic**
 

@@ -245,6 +245,7 @@ npm approve-scripts puppeteer
 ```
 
 ```bash
+grep "\[200\]" live.txt | awk '{print $1}' > urls.txt
 node postmessage_scanner.js 200.txt
 ```
 ---

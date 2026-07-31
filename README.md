@@ -225,7 +225,7 @@ https://HOST/appsettings.json
 ```
 <br>
 
-### **4.3 PostMessage**
+### **4.4 PostMessage**
 
 Navegador não impõe nenhuma verificação de origem — é responsabilidade de quem escreve o addEventListener checar de onde a mensagem veio (event.origin).
 
@@ -236,7 +236,7 @@ Navegador não impõe nenhuma verificação de origem — é responsabilidade de
 
 Opção 1 — DevTools (colar script no console)
 
-Opção 1 — Script Node + Puppeteer
+Opção 2 — Script Node + Puppeteer
 
 ```bash
 node -v   # confirma que tem Node instalado

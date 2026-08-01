@@ -326,3 +326,39 @@ node postmessage_scanner.js urls.txt cookies.json
 ```
 ---
 <br>
+
+### **4.5 CORS MissConfig**
+
+Onde procurar:
+
+*   APIs e Endpoints de Dados: Foque em rotas que retornam dados estruturados (/api/v1/..., /graphql, /user/data, /account/settings
+*   Requisições via AJAX/Fetch: (F12) na aba Network (Rede) e navegue pela aplicação. Procure por requisições em segundo plano que retornem JSON ou XML.
+*   Endpoints com Autenticação: Endpoints que exigem que o usuário esteja logado (ex: extratos, histórico de pedidos, tokens de acesso, configurações de perfil)
+
+O que Verificar:
+
+*   Access-Control-Allow-Origin (ACAO): Indica quais origens têm permissão para ler o resultado.
+*   Access-Control-Allow-Credentials (ACAC): Indica se o navegador pode expor a resposta quando credenciais (cookies/tokens) são incluídas. Deve ser estritamente `true`
+
+Como Verificar:
+
+*   Intercepte ou Envie para o Repeater: Pegue uma requisição legítima de API que retorne dados do usuário.
+*   Adicione o cabeçalho Origin: `Origin: https://evil.com`
+
+Cenários:
+
+`Cenário A: Configuração Segura (Não é Bug)`
+*   O servidor não retorna o cabeçalho Access-Control-Allow-Origin, ou retorna um domínio específico e confiável (ex: https://app.alvo.com)
+*   Conclusão: O navegador bloqueará qualquer tentativa de leitura externa.
+
+`Cenário B: CORS Aberto Público (Geralmente Baixo/Informativo)`
+*   Response: Access-Control-Allow-Origin: * | Access-Control-Allow-Credentials: false (ou o cabeçalho nem existe)
+*   Conclusão: Como o Credentials é falso ou ausente, sites maliciosos não conseguem roubar dados de sessões autenticadas de usuários específicos.
+
+`Cenário C: O Bug Real (Reflexão Insegura com Credenciais)`
+*   Response: Access-Control-Allow-Origin: https://evil.com | Access-Control-Allow-Credentials: true
+*   Conclusão: O servidor confia cegamente em qualquer origem que você enviar e permite o envio de cookies. Isso indica uma falha crítica de CORS Misconfiguration.
+
+---
+<br>
+

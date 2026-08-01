@@ -324,7 +324,7 @@ nano cookies.json
 grep "\[200\]" live.txt | awk '{print $1}' > urls.txt
 node postmessage_scanner.js urls.txt cookies.json
 ```
----
+
 <br>
 
 ### **4.5 CORS MissConfig**

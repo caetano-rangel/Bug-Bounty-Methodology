@@ -345,6 +345,7 @@ Como Verificar:
 *   Intercepte ou Envie para o Repeater: Pegue uma requisição legítima de API que retorne dados do usuário.
 *   Adicione o cabeçalho Origin: `Origin: https://evil.com`
 
+<br>
 Cenários:
 
 `Cenário A: Configuração Segura (Não é Bug)`

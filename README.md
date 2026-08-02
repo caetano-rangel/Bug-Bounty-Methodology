@@ -16,7 +16,7 @@
 | 1. [Initial Notes](#1-initial-notes-and-create-account) | Initial Notes About Application |
 | 2. [Reconnaissance](#2-reconnaissance-and-subdomain-enumeration) | Subdomain Enumeration & Initial Scanning |
 | 3. [OWASP 10](#3-OWASP-10) | Probing, Vulnerability Scanning & Analysis |
-| 4. [Business Logic](#4-business-logic) | Burp Testing |
+| 4. [Business Logic](#4-business-logic) | Burp Suit Testing |
 | 5. [POC Creation](#5-proof-of-concept-poc-creation) | Documentation & Evidence |
 | 6. [Reporting](#6-reporting) | Final Documentation |
 

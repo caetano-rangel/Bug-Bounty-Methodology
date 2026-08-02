@@ -359,6 +359,62 @@ Cenários:
 `Cenário C: O Bug Real (Reflexão Insegura com Credenciais)`
 *   Response: Access-Control-Allow-Origin: https://evil.com | Access-Control-Allow-Credentials: true
 *   Conclusão: O servidor confia cegamente em qualquer origem que você enviar e permite o envio de cookies. Isso indica uma falha crítica de CORS Misconfiguration.
+<br>
+
+
+### **4.6.1 Web Cache Poisoning**
+ 
+*   Identifique um **unkeyed input** (header/parâmetro que influencia a resposta mas não faz parte da cache key). Use o Param Miner (Burp) para automatizar a descoberta
+*   Headers unkeyed clássicos para testar:
+```bash
+X-Forwarded-Host: teste123.com
+X-Forwarded-Scheme: http
+X-Original-URL: /
+X-Rewrite-URL: /
+X-HTTP-Method-Override: GET
+X-Forwarded-Proto: http
+X-Forwarded-Port: 1337
+```
+ 
+```bash
+# Enviar sempre com cache-buster único para não poluir o cache compartilhado
+curl -i "https://target.com/?cb=849302" -H "X-Forwarded-Host: teste123.com"
+```
+ 
+*   Veja se o valor injetado é refletido na resposta (ex: em `<script src="http://teste123.com/...">`, canonical link, meta tag, redirect)
+*   Confirme indicadores de cache na resposta:
+```bash
+Age: 128
+X-Cache: HIT
+Cache-Control: public, max-age=...
+```
+ 
+*   Repita a requisição **sem** o header malicioso (mesmo cache-buster) e veja se o payload envenenado ainda aparece — isso confirma que ficou armazenado
+*   Verifique o header `Vary` — ele mostra o que o cache *diz* que usa como chave, e pode divergir do que a origem realmente processa (a divergência é a causa raiz do bug)
+*   PoC de impacto: acesse a URL envenenada de uma sessão limpa/anônima/outro IP e confirme que o payload é servido sem enviar o header novamente
+<br>
+
+### **4.6.2 Web Cache Deception (WCD)**
+ 
+*   Identifique uma rota **dinâmica e autenticada** que retorna dados sensíveis, ex: `/minhaconta/12345`, `/api/user/profile`, `/doc/12345`
+*   Adicione uma extensão estática inexistente ao final do path (não como query string):
+```bash
+https://target.com/minhaconta/12345/inexistente.css
+https://target.com/api/user/profile.js
+https://target.com/doc/12345.js
+```
+ 
+*   Envie a requisição autenticada (ex: no Burp Repeater) e verifique:
+```bash
+Status: 200 OK
+Cache-Control: public, max-age=...
+X-Cache: MISS
+```
+ 
+*   Repita a mesma requisição (mesma URL exata) e veja o cache virar `X-Cache: HIT`, confirmando que a resposta dinâmica/sensível foi cacheada como se fosse estática
+*   PoC de impacto: acesse a **mesma URL exata**, sem autenticação (sessão limpa/anônima ou de outra conta), e confirme se os dados da vítima aparecem — o vazamento é de **outro usuário**, não um payload seu injetado
+*   Cenário de exploração real: force a vítima a acessar a URL manipulada (via link/CSRF/redirect) e, como atacante não autenticado, acesse a mesma URL logo depois para roubar o conteúdo cacheado dela
+<br>
 
 ---
 <br>

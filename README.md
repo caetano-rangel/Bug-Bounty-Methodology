@@ -129,29 +129,8 @@ Validação manual com - curl -i target.com
 <br>
 
 **🐞XSS**
-```bash
-awk '{print $1}' live.txt > live_limpo.txt
-```
 
-```bash
-katana -u live.txt -d 5 -jc -o katana.txt
-```
-
-```bash
-cat all_urls.txt | uro > all_urls_dedup.txt
-```
-
-```bash
-cat all_urls_dedup.txt | gf xss > xss_candidatos.txt
-```
-
-```bash
-cat xss_candidatos.txt | Gxss -p '"><script>alert(1)</script>' -o gxss_out.txt
-```
-
-```bash
-cat gxss_out.txt | kxss
-```
+Todo Conteúdo de Xss --> https://github.com/caetano-rangel/Xss
 
 <br>
 

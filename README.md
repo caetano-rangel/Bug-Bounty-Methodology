@@ -49,7 +49,7 @@ subfinder -d target.com -o sub1.txt
 
 **sort -u**
 ```bash
-cat * | sort -u > subss.txt
+cat sub*.txt | sort -u > subss.txt
 ```
 
 **Alterx**

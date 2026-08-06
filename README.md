@@ -103,7 +103,7 @@ katana -list redirects_limpo.txt -d 3 -c 50 -p 20 -jc -mr "(url|redirect|next|re
 ```
 
 ```bash
-grep -ivE "linkedin|pinterest|twitter|x.com" katana.txt | sort -u > katana_limpo.txt && mv katana_limpo.txt katana.txt
+grep -ivE "linkedin|pinterest|twitter|t.me|x.com" katana.txt | sort -u > katana_limpo.txt && mv katana_limpo.txt katana.txt
 ```
 
 Filtrar para campos que servem como redirect.

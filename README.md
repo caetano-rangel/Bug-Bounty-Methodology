@@ -52,10 +52,25 @@ subfinder -d target.com -o sub1.txt
 cat sub*.txt | sort -u > subss.txt
 ```
 
-**Alterx**
+**Crt.sh**
 ```bash
-cat subss.txt | alterx -o alterx.txt
+curl -s "https://crt.sh/?q=%.alvo.com&output=json" \
+| jq -r '.[].name_value' \
+| sed 's/\*\.//g' \
+| sort -
 ```
+
+**Amass**
+```bash
+amass enum -passive -d alvo.com -o amass-passive.txt
+```
+
+Por que rodar subfinder e amass e crt.sh? Porque cada um cobre fontes diferentes.
+A regra é: junte tudo e deduplique.
+```bash
+cat subs.txt amass-*.txt crtsh.txt | sort -u > all-subs.txt
+```
+O subdomínio que vale o bounty pode ser justamente o que só uma das três achou.
 
 ### **2.2 Active Subdomain Enumeration**
 **🛠️Tools:** [Shuffledns](https://github.com/projectdiscovery/shuffledns), [Naabu](https://github.com/projectdiscovery/naabu), [Httpx](https://github.com/projectdiscovery/httpx)

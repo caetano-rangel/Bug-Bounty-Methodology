@@ -38,7 +38,7 @@ Antes de iniciar qualquer scan, o entendimento do alvo é fundamental:
 ## **2. Reconnaissance and Subdomain Enumeration**
 
 ### **2.1 Passive Subdomain Enumeration**
-**🛠️Tools:** [Subfinder](https://github.com/projectdiscovery/subfinder), [Alterx](https://github.com/projectdiscovery/alterx)
+**🛠️Tools:** [Subfinder](https://github.com/projectdiscovery/subfinder)
 
 <br>
 
@@ -47,9 +47,9 @@ Antes de iniciar qualquer scan, o entendimento do alvo é fundamental:
 subfinder -d target.com -o sub1.txt
 ```
 
-**sort -u**
+**Sort -u**
 ```bash
-cat sub*.txt | sort -u > subss.txt
+cat sub*.txt | sort -u > subs.txt
 ```
 
 **Crt.sh**
@@ -64,27 +64,25 @@ curl -s "https://crt.sh/?q=%.alvo.com&output=json" \
 ```bash
 amass enum -passive -d alvo.com -o amass-passive.txt
 ```
+<br>
 
 Por que rodar subfinder e amass e crt.sh? Porque cada um cobre fontes diferentes.
-A regra é: junte tudo e deduplique.
+A regra é: junte tudo e `deduplique`.
+O subdomínio que vale o bounty pode ser justamente o que só uma das três achou.
 ```bash
 cat subs.txt amass-*.txt crtsh.txt | sort -u > all-subs.txt
 ```
-O subdomínio que vale o bounty pode ser justamente o que só uma das três achou.
+
+<br>
 
 ### **2.2 Active Subdomain Enumeration**
-**🛠️Tools:** [Shuffledns](https://github.com/projectdiscovery/shuffledns), [Naabu](https://github.com/projectdiscovery/naabu), [Httpx](https://github.com/projectdiscovery/httpx)
+**🛠️Tools:** [Shuffledns](https://github.com/projectdiscovery/shuffledns), [Httpx](https://github.com/projectdiscovery/httpx)
 
 <br>
 
 **ShuffleDns**
 ```bash
 shuffledns -r ~/resolvers.txt -list subss.txt -mode resolve -o dns.txt
-```
-
-**Naabu**
-```bash
-cat dns.txt | naabu -top-ports 100 -o naabu.txt
 ```
 
 **HTTPX**

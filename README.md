@@ -87,7 +87,7 @@ shuffledns -r ~/resolvers.txt -list subss.txt -mode resolve -o dns.txt
 
 **HTTPX**
 ```bash
-httpx -l dns.txt -tech-detect -title -server -cl -sc -mc 200,201,301,302,403 -ports 80,443,8080,8443 -timeout 5 -o live.txt
+httpx -l dns.txt -tech-detect -title -server -cl -sc -mc 200,401,403 -ports 80,443,8080,8443 -timeout 5 -o live.txt
 ```
 
 ```bash

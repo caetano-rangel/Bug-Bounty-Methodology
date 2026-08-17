@@ -93,6 +93,55 @@ httpx -l dns.txt -tech-detect -title -server -cl -sc -mc 200,201,301,302,403 -po
 ```bash
 grep "\[200\]" live.txt > 200.txt
 ```
+
+<br>
+
+### **2.3 Endpoints**
+
+<br>
+
+**Gau**
+
+Getallurls. Ele busca URLs conhecidas de um domínio a partir de quatro fontes de arquivo: Wayback Machine, Common Crawl, AlienVault OTX e URLScan. É 100% passivo: ele não rastreia o alvo, só pergunta pros arquivos "que URLs desse domínio vocês já viram?".
+```bash
+gau alvo.com --subs --o urls-historicas.txt --blacklist png,jpg,css
+```
+
+**Waybackurls**
+
+Faz só a Wayback Machine, mas é rápido e confiável. Recebe domínios por stdin.
+```bash
+cat all-subs.txt | waybackurls > wayback.tx
+```
+
+<br>
+
+### **2.4 Analise de JS**
+
+<br>
+
+**Trick Clássica**
+```bash
+echo alvo.com | gau | grep '\.js$' | httpx -sc -mc 200 -ct | grep -iE 'text/javascript| application/javascript'
+```
+
+echo alvo.com | gau lista as URLs históricas; 
+grep '\.js$' mantém só as que terminam em .js;
+httpx -sc -mc 200 -ct mantém as que respondem 200 e mostra o content-type;
+grep final garante que é JS de verdade (e não um 404 disfarçado).
+
+<br>
+
+**LinkFinder**
+
+O LinkFinder usa regex pra varrer um arquivo JS e extrair todos os endpoints/paths que parecem URLs:
+
+```bash
+cd LinkFinder && pip install -r requirements.txt
+```
+```bash
+python3 linkfinder.py -i https://alvo.com/static/app.min.js -o cli
+```
 ---
 <br>
 

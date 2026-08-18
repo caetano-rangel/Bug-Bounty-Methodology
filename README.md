@@ -522,7 +522,7 @@ grep -rEi 'password|secret|api_key|DB_|mysql|--password=' ./dump
 ```
 <br>
 
-### **4.8 ATO - Reset de senha inseguro**
+### **4.8.1 ATO - Reset de senha inseguro**
  
 `Vetor 1A: Alvo do reset controlável (o IDOR do reset).`
 *   Em uma área logada, a request de "alterar senha" carrega quem está tendo a senha trocada. Se esse campo vier do cliente e o servidor não fixar na sessão, troque-o:
@@ -571,6 +571,67 @@ email=vitima@exemplo.com
 
 `Vetor 1D:   Token de reset previsível ou eterno.`
 *    Verifique o token: é sequencial? Curto? Baseado em timestamp? Expira?Invalida após o uso? Um token que não expira pode ser reusado meses depois; um previsível pode ser adivinhado. Gere dois resets seguidos e compare os tokens: se houver padrão, é explorável
+
+<br>
+
+### **4.8.2 JWT - Jason Web Token**
+
+*   header.payload.signature, três blocos Base64URL separados por ponto:
+```bash
+// header — diz QUAL algoritmo assina o token
+{"alg":"HS256","typ":"JWT"}
+// payload — as "claims" (afirmações sobre quem você é)
+{"userId":1001,"admin":false,"iat":1717000000,"exp":1717003600}
+```
+
+> **⚠️ Analogia:** o JWT é um cheque. Header e payload são o valor e o nome, escritos a caneta, qualquer um lê. A assinatura é a firma do banco. Falsificar o cheque é falsificar a firma. Os ataques a seguir são quatro jeitos de falsificar a firma (ou fazer o banco nem conferir).
+
+<br>
+
+`Vetor 2A:  alg=none , o cheque sem firma.`
+*   A especificação do JWT prevê "alg":"none" (token "não seguro", sem assinatura). Servidores deveriam rejeitar, mas muitos não. Você troca o algoritmo pra none , edita o payload e remove a assinatura (mantendo o ponto final):
+*   Se o servidor aceitar, ele confiou num cheque sem firma. Variantes de bypass quando o filtro é ingênuo: nOnE , NONE (capitalização mista).
+
+```bash
+{"alg":"none","typ":"JWT"}
+{"userId":1001,"admin":true}   // <- forjamos admin
+```
+
+```bash
+eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJ1c2VySWQiOjEwMDEsImFkbWluIjp0cnVlfQ.
+assinatura vazia, mas o "." continua
+```
+
+<br>
+
+`Vetor 2B:  Segredo fraco em HS256: crackeando a firma com hashcat.`
+*    HS256 assina com HMAC-SHA256 usando um segredo compartilhado. Se esse segredo for fraco (123456 , secret , changeme ), você o quebra offline e passa a assinar tokens válidos. Salve o JWT num arquivo e rode:
+
+```bash
+# -m 16500 é o modo "JWT" do hashcat; -a 0 é ataque por wordlist
+hashcat -a 0 -m 16500 jwt.txt /usr/share/wordlists/rockyou.txt
+```
+
+<br>
+
+`Vetor 2C:  Algorithm confusion (RS256 → HS256): usando a chave pública como segredo.`
+*    Esse é o pulo do gato. Em RS256 o token é assinado com a chave privada (só o servidor tem) e verificado com a pública (pode ser pública mesmo). Parece seguro, e é, se o servidor só aceitar RS256.
+
+O bug: muitas libs têm um verify() genérico que escolhe o algoritmo pelo header do token. Se o servidor guarda a chave pública pra verificar RS256, mas você manda um token com  alg:HS256 , a lib usa a mesma chave pública como segredo HMAC. E a chave pública... é pública! Você a tem. Então você assina o token em HS256 usando a chave pública como segredo, e o servidor verifica com a mesma chave pública. Bate. (Pré condição: a app entrega a chave pública ao  verify() como string/PEM, a mesma forma que vira segredo HMAC; 
+
+*    libs que tipam a chave como objeto/ KeyObject , ou que travam o algoritmo aceito, não caem nisso.)
+
+> **⚠️ Atenção:**  a versão da chave pública que você usa pra assinar tem que ser byte a byte idêntica à que o servidor guarda: mesmo formato (X.509 PEM) e inclusive os \n (newlines) caracteres não-imprimíveis. Um newline a mais ou a menos e a assinatura não bate. Não é "mais ou menos igual". É idêntica.
+
+<br>
+
+### **4.8.3 OAuth mal configurado**
+
+`Vetor A: State ausente → CSRF de vínculo de conta.`
+
+<br>
+
+`Vetor B: redirect_uri frouxo / vazamento via Referer.`
 
 ---
 <br>

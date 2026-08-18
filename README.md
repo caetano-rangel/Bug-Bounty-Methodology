@@ -479,7 +479,7 @@ X-Cache: MISS
 *   Cenário de exploração real: force a vítima a acessar a URL manipulada (via link/CSRF/redirect) e, como atacante não autenticado, acesse a mesma URL logo depois para roubar o conteúdo cacheado dela
 <br>
 
-### **.Git Exposto**
+### **4.7 .Git Exposto**
  
 *   Quando o .git é deixado público, o histórico inteiro do repositório está acessível via HTTP.
 *   Primeiro confirme (manualmente ou com a extensão de navegador DotGit, que avisa quando um site tem .git aberto):

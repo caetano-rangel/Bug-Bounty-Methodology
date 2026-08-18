@@ -332,7 +332,7 @@ Iniciar os testes de endpoints no burp:
 
 Módulo de monitoramento do Spring Boot. Quando mal configurado, expõe endpoints internos sem autenticação.
 
-*   Identificar candidatos Filtre hosts que rodam Java/Spring/Tomcat/Jetty (via httpx -tech-detect ou observando headers/erros típicos de stack Java).
+*   Identificar candidatos Filtre hosts que rodam Java/Spring/Tomcat/Jetty (via httpx -tech-detect).
 *   https://HOST/actuator / https://HOST:8081/actuator / http://HOST/actuator
 *   404 / {"status":"NOT_FOUND"} → endpoint desabilitado - 401 / 403 → protegido por auth
 *   Taxa de sucesso esperada: Baixa

@@ -310,6 +310,23 @@ Content-Type: application/json
 
 <br>
 
+**🐞 ATO**
+
+*   Fluxo de senha: telas de "esqueci a senha", "alterar senha", links de reset no email. Capture cada parâmetro da request (login, e-mail,  user_id , token , code ).
+*   Tokens: abra o DevTools → Application → Local Storage / Cookies e procure poralgo que comece com eyJ (é Base64URL de também o header uthorization: Bearer .
+*   Endpoints de chave: tente {" , quase sempre um JWT). Veja/.well-known/jwks.json e  /jwks.json , que entregam a chave pública que vamos usar no ataque de algorithm confusion.
+*   OAuth: procure response_type=code , client_id , redirect_uri , state nas URLs de "login com Google/GitHub/etc.".
+
+Ferramentas:
+
+*    jwt.io: cola o token e ele decodifica header.payload.signature num clique. Ótimo pra inspecionar sem instalar nada.
+*    jwt_tool (ticarpi/jwt_tool) é o canivete suíço de JWT em linha de comando: testa alg=none, confusão de algoritmo, etc.
+*    hashcat: pra crackear o segredo HMAC (modo -m 16500 , que cobre HS256, HS384 e HS512 — ele detecta o algoritmo pelo tamanho da assinatura).
+
+Olhar sessão 4.8 para ataques de ATO.
+
+<br>
+
 ---
 <br>
 

@@ -323,6 +323,26 @@ Ferramentas:
 *    jwt_tool (ticarpi/jwt_tool) é o canivete suíço de JWT em linha de comando: testa alg=none, confusão de algoritmo, etc.
 *    hashcat: pra crackear o segredo HMAC (modo -m 16500 , que cobre HS256, HS384 e HS512 — ele detecta o algoritmo pelo tamanho da assinatura).
 
+Checklist:
+
+*    No reset: o alvo (login/e-mail) é controlável no corpo? O endpoint pede autenticação?
+*    Testar Host header injection (Host/X-Forwarded-Host) no link de reset.
+*    O token de reset é imprevisível, expira e invalida após o uso?
+*    Testar troca de token/e-mail no refresh entre Conta A e Conta B.
+*    Achear JWT (eyJ...)? Decodifiquei o header: qual alg?
+*    Testar alg=none (e variantes de capitalização).
+*    HS256 → rodei hashcat -a 0 -m 16500 com wordlist.
+*    RS256 → busquei /jwks.json e tentei algorithm confusion.
+*    Testar injeção de kid/jku/jwk no header.
+*    OAuth: o state existe e é validado? O redirect_uri aceita meu domínio?
+*    OTP/2FA: tem rate limit? Dá pra manipular a response (400→200)? Código reusa? pinID trocável?
+
+<br>
+
+*    A pergunta-mestra:"qual dado dessa request decide quem eu sou, e eu consigo mexer nele?"
+*    Em JWT, toda a segurança está na verificação da assinatura. Allowlist de algoritmo + chave forte mata a maioria dos ataques.
+*    alg=none rejeitado num formato pode passar em outro: teste none, None, nOnE, NONE.
+
 <br>
 
 Olhar sessão 4.8 para vetores de ATO.

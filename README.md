@@ -323,6 +323,8 @@ Ferramentas:
 *    jwt_tool (ticarpi/jwt_tool) é o canivete suíço de JWT em linha de comando: testa alg=none, confusão de algoritmo, etc.
 *    hashcat: pra crackear o segredo HMAC (modo -m 16500 , que cobre HS256, HS384 e HS512 — ele detecta o algoritmo pelo tamanho da assinatura).
 
+<br>
+
 Olhar sessão 4.8 para ataques de ATO.
 
 <br>

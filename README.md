@@ -313,7 +313,7 @@ Checklist:
 
 <br>
 
-Olhar sessão 4.8 para vetores de ATO.
+Olhar sessão 4.1 para vetores de ATO.
 
 <br>
 

@@ -221,17 +221,27 @@ chmod +x check_takeover.sh
 
 **🐞IDOR (Insecure Direct Object Reference)**
 
-*   Mapeie todos os endpoints que recebem um ID (numérico, UUID, hash) — `/api/user/123`, `/invoice?id=456`, `/order/789/details`
-*   Crie 2 contas (User A e User B) e troque os IDs entre sessões
+*    Crie 2 contas (perfis diferentes quando possível).
+*    Mapear todo parâmetro com identificador (id , cpf , chargeId , conta , uuid ...).
+*    Testar troca de ID em GET, POST, PUT, DELETE e no corpo/headers.
+*    Testar troca de token entre Conta A e Conta B em funções restritas.
+*    Como admin, anotar ações privilegiadas e tentar chamá-las como usuário comum (BFLA).
+*    Procurar IDs/valores vazando em respostas, JS e e-mails (pra IDs não sequenciais).
+*    Mostrar escala/impacto (Intruder) e identificar dado sensível (PII).
 
 ```bash
-# Extrair todos os parâmetros que parecem IDs
-cat all_urls_dedup.txt | grep -E '\?(id|user_id|uid|account|order|invoice|doc)=' > idor_candidatos.txt
+POST /api/relatorios/download HTTP/2
+Host: alvo.com
+Authorization: Bearer <token_da_Conta_B>   # <- troca aqui (era da Conta A)
+Content-Type: application/json
+{"reportId": 42
 ```
 
 ```bash
-# Testar substituição de ID com Burp Intruder ou ffuf autorizado (autenticado)
-ffuf -u "https://target.com/api/user/FUZZ" -H "Cookie: session=USERB_TOKEN" -w ids.txt -mc 200
+# BFLA
+POST /api/admin/store/block HTTP/2
+Authorization: Bearer <token_do_usuario_comum>   # <- perfil sem permissão
+{"storeId": 77
 ```
 
 *   Teste tanto **incremento numérico** (1, 2, 3...) quanto **IDOR em UUID** (trocar o UUID de outro usuário capturado em algum lugar do app — comentários, avatars, exports)

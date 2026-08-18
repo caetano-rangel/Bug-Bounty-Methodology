@@ -625,13 +625,14 @@ O bug: muitas libs têm um verify() genérico que escolhe o algoritmo pelo heade
 
 <br>
 
-### **4.8.3 OAuth mal configurado**
+### **4.8.3 Bypass de 2FA / OTP**
 
-`Vetor A: State ausente → CSRF de vínculo de conta.`
+`Vetor A:  Validação no client-side (response manipulável).`
+*   O servidor responde 400 pra um OTP errado e o front decide o que fazer com base no status. Intercepte a resposta e troque 400 Bad Request por 200 OK :
 
-<br>
-
-`Vetor B: redirect_uri frouxo / vazamento via Referer.`
+```bash
+HTTP/2 400 Bad Request →  HTTP/2 200 OK   # <- editado no Burp; o front acha que validou
+```
 
 ---
 <br>

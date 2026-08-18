@@ -270,12 +270,20 @@ http://169.254.169.254/latest/meta-data/   (cloud metadata AWS/GCP/Azure)
 
 **🐞Broken Access Control (BAC)**
 
-*   Compare respostas entre usuário autenticado vs não autenticado vs usuário de outro nível de permissão (admin/user/guest)
+*    Crie 2 contas (perfis diferentes quando possível).
+*    Mapear todo parâmetro com identificador (id , cpf , chargeId , conta , uuid ...).
+*    Testar troca de ID em GET, POST, PUT, DELETE e no corpo/headers.
+*    Testar troca de token entre Conta A e Conta B em funções restritas.
+*    Como admin, anotar ações privilegiadas e tentar chamá-las como usuário comum (BFLA).
+*    Procurar IDs/valores vazando em respostas, JS e e-mails (pra IDs não sequenciais).
+*    Mostrar escala/impacto (Intruder) e identificar dado sensível (PII).
 
 ```bash
-# Repetir todas as requisições autenticadas sem cookie/token
-curl -i https://target.com/api/admin/users
-curl -i -H "Cookie: session=" https://target.com/api/admin/users
+POST /api/relatorios/download HTTP/2
+Host: alvo.com
+Authorization: Bearer <token_da_Conta_B>   # <- troca aqui (era da Conta A)
+Content-Type: application/json
+{"reportId": 42
 ```
 
 *   Teste **Forced Browsing** em rotas administrativas comuns:

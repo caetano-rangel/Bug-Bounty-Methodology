@@ -145,7 +145,7 @@ python3 linkfinder.py -i https://alvo.com/static/app.min.js -o cli
 ---
 <br>
 
-## **3. Vulnerabilities0**
+## **3. Vulnerabilities**
 **🛠️Tools:** [OpenRedirex](https://github.com/devanshbatham/OpenRedirex)
 
 <br>

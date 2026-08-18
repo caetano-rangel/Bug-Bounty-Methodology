@@ -278,38 +278,6 @@ http://169.254.169.254/latest/meta-data/   (cloud metadata AWS/GCP/Azure)
 
 <br>
 
-**🐞Broken Access Control (BAC)**
-
-*    Crie 2 contas (perfis diferentes quando possível).
-*    Mapear todo parâmetro com identificador (id , cpf , chargeId , conta , uuid ...).
-*    Testar troca de ID em GET, POST, PUT, DELETE e no corpo/headers.
-*    Testar troca de token entre Conta A e Conta B em funções restritas.
-*    Como admin, anotar ações privilegiadas e tentar chamá-las como usuário comum (BFLA).
-*    Procurar IDs/valores vazando em respostas, JS e e-mails (pra IDs não sequenciais).
-*    Mostrar escala/impacto (Intruder) e identificar dado sensível (PII).
-
-```bash
-POST /api/relatorios/download HTTP/2
-Host: alvo.com
-Authorization: Bearer <token_da_Conta_B>   # <- troca aqui (era da Conta A)
-Content-Type: application/json
-{"reportId": 42
-```
-
-*   Teste **Forced Browsing** em rotas administrativas comuns:
-```bash
-/admin
-/admin/dashboard
-/internal
-/api/v1/admin
-/manage
-/console
-```
-
-*   Teste manipulação de role/parâmetro em requisições (`"role":"user"` → `"role":"admin"`, `"isAdmin":false` → `"isAdmin":true`)
-
-<br>
-
 **🐞 ATO**
 
 *   Fluxo de senha: telas de "esqueci a senha", "alterar senha", links de reset no email. Capture cada parâmetro da request (login, e-mail,  user_id , token , code ).

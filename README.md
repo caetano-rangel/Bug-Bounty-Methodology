@@ -390,6 +390,17 @@ Serializar = transformar um objeto em bytes pra guardar/transmitir; desserializa
 
 <br>
 
+Checklist:
+
+*    Mapeei features que tocam o SO (ping, conversão de arquivo, export) e campos refletidos (busca, perfil, e-mails de template).
+*    Testei os separadores de command injection: | ; | & || (cross-platform).
+*    Sem retorno na resposta? Tentei blind por tempo (sleep / ping -c 10) e OOB (DNS/HTTP via Collaborator).
+*    Filtro no caminho? Apliquei bypass: ${IFS} , {a,b} , aspas/ \ no meio do binário.
+*    Upload: tentei bypass de extensão, MIME e magic bytes; achei o path real e testei execução.
+*    Procurei dados serializados (rO0 , O:4: , ViewState) pra desserialização.
+
+<br>
+
 ---
 <br>
 

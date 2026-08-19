@@ -384,7 +384,7 @@ Se uploads/ é servido pelo Apache/PHP e você consegue salvar um shell.php lá,
 
 <br>
 
-`Upload: o arquivo no lugar errado`
+`Desserialização: bytes que viram objetos`
 
 Serializar = transformar um objeto em bytes pra guardar/transmitir; desserializar = reconstruir. O problema: reconstruir um objeto pode disparar métodos (construtores, __wakeup no PHP, readObject no Java). Se o atacante controla os bytes, ele monta uma cadeia de objetos (gadget chain) cuja reconstrução acaba chamando algo como Runtime.exec().
 

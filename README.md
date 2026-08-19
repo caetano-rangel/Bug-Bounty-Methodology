@@ -317,6 +317,79 @@ Olhar sessão 4.1 para vetores de ATO.
 
 <br>
 
+**🐞 RCE**
+
+Essa é a raiz dos quatro caminhos. Em cada um, um dado seu cruza uma fronteira onde devia continuar sendo dado e vira instrução:
+
+| Caminho | Onde vira instrução | Resultado |
+|------|----------|------------|
+| OS Command Injection | input concatenado num comando de shell (exec() ) | comandos no SO |
+| SSTI | input concatenado num template que é avaliado |código na linguagem da app → SO |
+| Upload inseguro |arquivo seu salvo num diretório executável pelo servidor | webshell → comandos no SO |
+| Desserialização |bytes seus reconstruídos em objetos que disparam código | gadget chain → comandos no SO |
+
+*    Guardar isso. O resto é como cruzar cada fronteira.
+
+<br>
+
+`OS Command Injection: A concatenação fatal`
+
+```bash
+// Backend VULNERÁVEL (PHP) — ferramenta de "ping" num painel
+$host = $_GET['host'];
+system("ping -c 1 " . $host);   // <- seu input entra cru na linha de comando
+```
+
+Se você manda host=8.8.8.8, roda ping -c 1 8.8.8.8. Mas o shell interpreta metacaracteres. Se você manda host=8.8.8.8; id, o shell vê dois comandos separados por ; e roda os dois:
+
+```bash
+ping -c 1 8.8.8.8; id
+```
+
+O ; é o ponto onde dado virou instrução. O shell não tem como saber que id "não devia estar ali"; pra ele é só mais um comando
+
+<br>
+
+`SSTI: quando o input entra no template`
+
+Template engine é o que monta HTML com dados dinâmicos (Jinja2 no Python/Flask, Twig no PHP/Symfony, Freemarker no Java). O fluxo seguro passa o dado como variável:
+
+```bash
+# SEGURO — username é um VALOR passado ao template
+render_template("hello.html", username=request.args.get("name")
+```
+
+O fluxo vulnerável concatena o input dentro do texto do template e só então renderiza:
+
+```bash
+# VULNERÁVEL (Flask/Jinja2) — input vira PARTE do template
+from jinja2 import Template
+nome = request.args.get("name")
+Template("Olá " + nome).render()   # <- o template é construído com input do usuário
+```
+
+Agora name={{7*7}} não é texto: o Jinja2 avalia 7*7 e devolve Olá 49. Você está executando expressões na linguagem do template, e de expressão a os.popen('id') é um pulo.
+
+<br>
+
+`Upload: o arquivo no lugar errado`
+
+```bash
+// VULNERÁVEL — salva com o nome original, sem validar o conteúdo
+move_uploaded_file($_FILES['avatar']['tmp_name'], "uploads/" . $_FILES['avatar']
+['name']);
+```
+
+Se uploads/ é servido pelo Apache/PHP e você consegue salvar um shell.php lá, ao acessar https://alvo.com/uploads/shell.php o servidor executa o PHP. O arquivo deixou de ser "dado armazenado" e virou "código executável".
+
+<br>
+
+`Upload: o arquivo no lugar errado`
+
+Serializar = transformar um objeto em bytes pra guardar/transmitir; desserializar = reconstruir. O problema: reconstruir um objeto pode disparar métodos (construtores, __wakeup no PHP, readObject no Java). Se o atacante controla os bytes, ele monta uma cadeia de objetos (gadget chain) cuja reconstrução acaba chamando algo como Runtime.exec().
+
+<br>
+
 ---
 <br>
 

